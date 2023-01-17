@@ -8,19 +8,19 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 matplotlib.use("TkAgg")
 
-massVV = 4000  # масса вв
-lenToBomb = 20  # расстояние от места взрыва
+massVV = 4  # масса вв (кг)
+lenToBomb = 20  # расстояние от места взрыва (м)
 tensileStrength = 30000000  # прочность на растяжение
 equivalenceCoefficientVV = 1  # коэффициент эквивалентности ВВ
 fractionOfExplosionEnergy = 0  # доля энергии взрыва
 moduleUng = 700000000000  # модуль Юнга
 correctionFactor = 2.3  # поправочный коэффициент
 p = 2500  # плотность стекла
-depth = 0.009  # толщина стекла
-dh = 0  # высота от 0
-cor_left = 0 # сдвиг стекла относительно взрыва
-x_size = 800 # ширина стекла
-y_size = 1400 # высота стекла
+depth = 0.015  # толщина стекла (м)
+dh = 0  # высота от 0 (м)
+cor_left = 0 # сдвиг стекла относительно взрыва (м)
+x_size = 0.8 # ширина стекла (м)
+y_size = 1.4 # высота стекла (м)
 squere_count = [
     [120 * 120, 1 * 0.33],
     [80 * 80, 6 * 0.33],
@@ -33,7 +33,7 @@ squere_count = [
 
 class EventReaction:
     def __init__(self, mass_react, keff):
-        self.mass_react, self.keff = mass_react, keff
+        self.mass_react, self.keff = mass_react*1000, keff
 
 
 def get_count_parts(x, y):
@@ -64,8 +64,8 @@ class Glass:
         self.ff, self.eo, self.ee, self.p, self.h, self.distance_x, self.pos_dh, self.distance_z, self.air_resistance \
             = ff, eo, ee, density, h, distance_x, pos_dh, distance_z, air_resistance
         self.parent = parent
-        self.size_x = size_x
-        self.size_y = size_y
+        self.size_x = size_x*1000
+        self.size_y = size_y*1000
         self.mass_react = parent.mass_react
 
     def projectile(self, cor_dh: float = 0, correct_left: float = 0):
