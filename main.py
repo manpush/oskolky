@@ -18,6 +18,7 @@ correctionFactor = 2.3  # поправочный коэффициент
 p = 2500  # плотность стекла
 depth = 0.009  # толщина стекла
 dh = 0  # высота от 0
+cor_left = 10
 x_size = 800
 y_size = 1400
 squere_count = [
@@ -32,7 +33,7 @@ squere_count = [
 
 class event_reaction:
     def __init__(self, mass_react, keff, air_resistance):
-        self.mass_react, self.keff, self.air_resistance = mass_react, keff, air_resistance
+        self.mass_react, self.keff = mass_react, keff
 
 
 class glass:
@@ -41,7 +42,7 @@ class glass:
     # ee - поправочный коэффициент, p - плотность стекла,h – толщина стекла,eo – модуль Юнга
     # delp– давление во фронте,v0 - Скорость осколка,q– эффективная масса взрывчатого вещества
     # fad - f_d*ε_d
-    def __init__(self, ff, eo, ee, p, h, distance_x, pos_dh, distance_z, rho_st, parent, size_x, size_y):
+    def __init__(self, ff, eo, ee, p, h, distance_x, pos_dh, distance_z, air_resistance, parent, size_x, size_y):
         """
         :param ff: прочность на растяжение
         :param eo: модуль Юнга
@@ -51,20 +52,19 @@ class glass:
         :param distance_x: расстояние от места взрыва
         :param pos_dh: высота стекла над уровнем взрыва
         :param distance_z: смещение в сторону от взрыва
-        :param rho_st: ??Сопротивление??
+        :param air_resistance: Сопротивление воздуха
         :param parent: event info
         :param square: площадь стекла
         """
-        self.ff, self.eo, self.ee, self.p, self.h, self.distance_x, self.pos_dh, self.distance_z, self.rho_st = ff, eo, ee, p, h, distance_x, pos_dh, distance_z, rho_st
+        self.ff, self.eo, self.ee, self.p, self.h, self.distance_x, self.pos_dh, self.distance_z, self.air_resistance = ff, eo, ee, p, h, distance_x, pos_dh, distance_z, air_resistance
         self.parent = parent
         self.size_x = size_x
         self.size_y = size_y
         self.mass_react = parent.mass_react
-        self.air_resistance = parent.air_resistance
 
     def projectile(self, cor_dh=0, cor_left=0):
-        q = (
-                        1 - fractionOfExplosionEnergy) * equivalenceCoefficientVV * self.parent.mass_react  # q – эффективная масса взрывчатого вещества
+        q = (1 - fractionOfExplosionEnergy) * equivalenceCoefficientVV * self.parent.mass_react  # q –
+        # эффективная масса взрывчатого вещества
         rr = math.sqrt(self.distance_x ** 2 + self.distance_z ** 2) / q ** (1 / 3)  # rr - приведенное расстояние
         if rr < 17.8:
             delp = 100 * (0.92 + ((3.5 + 10.6 / rr) / rr)) / rr
@@ -126,7 +126,6 @@ class glass:
         partsCount = self.get_count_parts(self.size_x, self.size_y)
         for i in squere_count:
             for j in range(int(i[1] * partsCount)):
-                # parts.append(glass(self.ff, self.eo, self.ee, self.p, self.h, self.distance_x, self.pos_dh, self.distance_z, self.rho_st, self, i[0]))
                 cor_dh = random.uniform(0, int(self.size_x / 100))
                 cor_left = random.uniform(0, int(self.size_y / 100))
                 r_xs, r_ys, r_zs, tof = glass(self.ff, self.eo, self.ee, self.p, self.h, self.distance_x, self.pos_dh,
@@ -137,20 +136,14 @@ class glass:
 
 
 er = event_reaction(massVV, equivalenceCoefficientVV, 1.225)
-gss = glass(tensileStrength, moduleUng, correctionFactor, p, depth, lenToBomb, dh, 0, 0.2, er, y_size, x_size)
+gss = glass(tensileStrength, moduleUng, correctionFactor, p, depth, lenToBomb, dh, cor_left, 0.2, er, y_size, x_size)
 
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111, projection='3d')
 gss.print_destroy(ax)
-# r_xs, r_ys, r_zs, tof = gss.projectile()
-# ax.plot(r_xs, r_zs, r_ys, label="Gravity and Drag")
-# ax.grid(True)
-
-# plt.legend()
 plt.axis("square")
 plt.xlabel('X')
 plt.ylabel('Z')
-# plt.colorbar
 root = Tk()
 canvas = FigureCanvasTkAgg(fig, root)
 canvas.get_tk_widget().grid(row=0, column=0)
