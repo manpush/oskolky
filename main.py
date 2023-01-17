@@ -8,8 +8,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 matplotlib.use("TkAgg")
 
-massVV = 70  # масса вв
-lenToBomb = 5  # расстояние от места взрыва
+massVV = 4000  # масса вв
+lenToBomb = 20  # расстояние от места взрыва
 tensileStrength = 30000000  # прочность на растяжение
 equivalenceCoefficientVV = 1  # коэффициент эквивалентности ВВ
 fractionOfExplosionEnergy = 0  # доля энергии взрыва
@@ -18,9 +18,9 @@ correctionFactor = 2.3  # поправочный коэффициент
 p = 2500  # плотность стекла
 depth = 0.009  # толщина стекла
 dh = 0  # высота от 0
-cor_left = 10
-x_size = 800
-y_size = 1400
+cor_left = 0 # сдвиг стекла относительно взрыва
+x_size = 800 # ширина стекла
+y_size = 1400 # высота стекла
 squere_count = [
     [120 * 120, 1 * 0.33],
     [80 * 80, 6 * 0.33],
@@ -85,7 +85,7 @@ class Glass:
         square = self.size_x * self.size_y
         time = np.linspace(0, 100, 10000)
         tof = 0.0
-        alpha = math.atan((self.distance_z + correct_left) / math.sqrt(self.distance_x ** 2 + cor_dh ** 2))
+        alpha = math.atan((self.distance_z + correct_left) / self.distance_x)
         dt = time[1] - time[0]
         gravity = -g * m
         v_x = v * math.fabs(np.cos(theta))
@@ -129,8 +129,8 @@ class Glass:
         parts_count = get_count_parts(self.size_x, self.size_y)
         for i in squere_count:
             for j in range(int(i[1] * parts_count)):
-                cor_dh = float(random.uniform(0, int(self.size_x / 100)))
-                corect_left = float(random.uniform(0, int(self.size_y / 100)))
+                cor_dh = float(random.uniform(0.0, float(self.size_x / 100)))
+                corect_left = float(random.uniform(0.0, float(self.size_y / 100)))
                 r_xs, r_ys, r_zs, tof = Glass(self.ff, self.eo, self.ee, self.p, self.h, self.distance_x, self.pos_dh,
                                               self.distance_z,
                                               random.uniform(0.2, 1.2) / 10, self, math.sqrt(i[0]),
@@ -146,7 +146,8 @@ gss.print_destroy(ax)
 plt.axis("square")
 plt.xlabel('X')
 plt.ylabel('Z')
-root = Tk()
-canvas = FigureCanvasTkAgg(fig, root)
-canvas.get_tk_widget().grid(row=0, column=0)
-root.mainloop()
+plt.show()
+# root = Tk()
+# canvas = FigureCanvasTkAgg(fig, root)
+# canvas.get_tk_widget().grid(row=0, column=0)
+# root.mainloop()
