@@ -13,19 +13,19 @@ matplotlib.use("TkAgg")
 root = Tk()
 
 
-massVV = 4  # масса вв (кг)
-lenToBomb = 20  # расстояние от места взрыва (м)
-tensileStrength = 7000000  # прочность на растяжение
+massVV = 10  # масса вв (кг)
+lenToBomb = 12.3  # расстояние от места взрыва (м)
+tensileStrength = 120000000  # прочность на растяжение
 equivalenceCoefficientVV = 1  # коэффициент эквивалентности ВВ
 
 moduleUng = 700000000000  # модуль Юнга
 correctionFactor = 2.3  # поправочный коэффициент
 p = 2500  # плотность стекла
-depth = 0.015  # толщина стекла (м)
+depth = 0.006  # толщина стекла (м)
 dh = 0  # высота от 0 (м)
 cor_left = 0  # сдвиг стекла относительно взрыва (м)
-x_size = 0.8  # ширина стекла (м)
-y_size = 1.4  # высота стекла (м)
+x_size = 1.2  # ширина стекла (м)
+y_size = 1.5  # высота стекла (м)
 
 Label(root, text="Параметры события").grid(row=0, column=2, columnspan=2)
 
@@ -80,7 +80,7 @@ def start_calculation():
 
     ax = fig.add_subplot(111, projection='3d')
     er = EventReaction(massVV, equivalenceCoefficientVV)
-    gss = Glass(tensileStrength, moduleUng, correctionFactor, p, depth, lenToBomb, dh, 10, 0.2, er, y_size, x_size)
+    gss = Glass(tensileStrength, moduleUng, correctionFactor, p, depth, lenToBomb, dh, cor_left, 0.2, er, y_size, x_size)
     gss.print_destroy(ax)
     plt.axis("square")
     plt.xlabel('X')

@@ -5,21 +5,22 @@ import numpy as np
 fractionOfExplosionEnergy = 0  # доля энергии взрыва
 
 squere_count = [
-    [120 * 120, 1 * 0.33],
-    [80 * 80, 6 * 0.33],
-    [40 * 40, 11 * 0.33],
-    [30 * 30, 10 * 0.33],
-    [70 * 10, 4 * 0.33],
-    [50 * 10, 1 * 0.33],
+    [120 * 120, 0.03*0.3],
+    [80 * 80, 0.18*0.3],
+    [40 * 40, 0.33*0.3],
+    [30 * 30, 0.30*0.3],
+    [70 * 10, 0.12*0.3],
+    [50 * 10, 0.03*0.3],
+    [5 * 5, 0.7],
 ]
 
 class EventReaction:
     def __init__(self, mass_react, keff):
-        self.mass_react, self.keff = mass_react * 1000, keff
+        self.mass_react, self.keff = mass_react * 100, keff
 
 
 def get_count_parts(x, y):
-    return math.sqrt(x * y) / 100
+    return math.sqrt(x * y)/3
 
 
 class Glass:
@@ -64,6 +65,8 @@ class Glass:
         theta = math.atan(self.pos_dh + cor_dh / math.sqrt(self.distance_x ** 2 + self.distance_z ** 2))
         g = 9.81
         m = self.size_x * self.size_y * self.depth / 100 * self.p
+        if m<10000000:
+            return None, None, None, None
         square = self.size_x * self.size_y
         time = np.linspace(0, 100, 10000)
         tof = 0.0
@@ -76,6 +79,7 @@ class Glass:
         r_y = self.pos_dh + cor_dh
         r_z = correct_left
 
+        print(v,delp, m/10000000)
         r_xs = list()
         r_ys = list()
         r_zs = list()
@@ -109,6 +113,7 @@ class Glass:
 
     def print_destroy(self, axes):
         parts_count = get_count_parts(self.size_x, self.size_y)
+        print(parts_count)
         for i in squere_count:
             for j in range(int(i[1] * parts_count)):
                 cor_dh = float(random.uniform(0.0, float(self.size_x / 100)))
@@ -117,4 +122,5 @@ class Glass:
                                               self.distance_z,
                                               random.uniform(0.2, 1.2) / 10, self.event_destroy, math.sqrt(i[0]),
                                               math.sqrt(i[0])).projectile(cor_dh, corect_left)
-                axes.plot(r_xs, r_zs, r_ys)
+                if r_zs is not None:
+                    axes.plot(r_xs, r_zs, r_ys)
