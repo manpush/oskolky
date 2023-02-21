@@ -27,6 +27,8 @@ cor_left = 0  # сдвиг стекла относительно взрыва (�
 x_size = 1.2  # ширина стекла (м)
 y_size = 1.5  # высота стекла (м)
 
+root.rowconfigure(index=15, weight=40)
+
 Label(root, text="Параметры события").grid(row=0, column=2, columnspan=2)
 
 Label(root, text="Масса взрывчатого вещества").grid(row=1, column=2, sticky=E)
@@ -68,19 +70,29 @@ ent_Pos_dh = Entry(root, width=30)
 ent_Pos_dh.grid(row=10, column=3)
 
 Label(root, text="Расстояние от места взрыва перпендикулярно нормали к поверхности стекла").grid(row=11, column=2, sticky=E)
-
+ent_cor_left = Entry(root, width=30)
+ent_cor_left.grid(row=11, column=3)
 
 Label(root, text="Сопротивление воздуха").grid(row=12, column=2, sticky=E)
+ent_air_resistance = Entry(root, width=30)
+ent_air_resistance.grid(row=12, column=3)
+
 Label(root, text="Высота стекла").grid(row=13, column=2, sticky=E)
+ent_size_y = Entry(root, width=30)
+ent_size_y.grid(row=13, column=3)
+
 Label(root, text="Ширина стекла").grid(row=14, column=2, sticky=E)
+ent_size_x = Entry(root, width=30)
+ent_size_x.grid(row=14, column=3)
+
 
 
 def start_calculation():
     fig = plt.figure(figsize=(9, 9))
 
     ax = fig.add_subplot(111, projection='3d')
-    er = EventReaction(massVV, equivalenceCoefficientVV)
-    gss = Glass(tensileStrength, moduleUng, correctionFactor, p, depth, lenToBomb, dh, cor_left, 0.2, er, y_size, x_size)
+    er = EventReaction(ent_MassVV.get(), ent_equivalenceCoefficientVV.get())
+    gss = Glass(ent_TensileStrength.get(), ent_ModuleUng.get(), ent_CorrectionFactor.get(), ent_Density.get(), ent_Depth.get(), ent_lenToBomb.get(), ent_Pos_dh.get(), ent_cor_left.get(), 0.2, ent_er.get(), ent_size_y.get(), ent_size_x.get())
     gss.print_destroy(ax)
     plt.axis("square")
     plt.xlabel('X')
@@ -89,7 +101,7 @@ def start_calculation():
     canvas.get_tk_widget().grid(row=0, column=0, rowspan=16)
 
 
-Button(root, text="Рассчитать", command=start_calculation).grid(row=15, column=2)
+Button(root, text="Рассчитать", command=start_calculation).grid(row=15, column=2, sticky=N)
 
 
 root.mainloop()
