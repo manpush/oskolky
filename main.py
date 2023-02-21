@@ -24,8 +24,8 @@ p = 2500  # плотность стекла
 depth = 0.006  # толщина стекла (м)
 dh = 0  # высота от 0 (м)
 cor_left = 0  # сдвиг стекла относительно взрыва (м)
-x_size = 1.2  # ширина стекла (м)
-y_size = 1.5  # высота стекла (м)
+size_x = 1.2  # ширина стекла (м)
+size_y = 1.5  # высота стекла (м)
 
 root.rowconfigure(index=15, weight=40)
 
@@ -85,14 +85,43 @@ Label(root, text="Ширина стекла").grid(row=14, column=2, sticky=E)
 ent_size_x = Entry(root, width=30)
 ent_size_x.grid(row=14, column=3)
 
+def set_default_values():
+    ent_MassVV.delete(0, END)
+    ent_equivalenceCoefficientVV.delete(0, END)
+    ent_TensileStrength.delete(0, END)
+    ent_ModuleUng.delete(0, END)
+    ent_CorrectionFactor.delete(0, END)
+    ent_Density.delete(0, END)
+    ent_Depth.delete(0, END)
+    ent_lenToBomb.delete(0, END)
+    ent_Pos_dh.delete(0, END)
+    ent_cor_left.delete(0, END)
+    ent_air_resistance.delete(0, END)
+    ent_size_y.delete(0, END)
+    ent_size_x.delete(0, END)
+
+    ent_MassVV.insert(0, str(massVV))
+    ent_equivalenceCoefficientVV.insert(0, str(equivalenceCoefficientVV))
+    ent_TensileStrength.insert(0, str(tensileStrength))
+    ent_ModuleUng.insert(0, str(moduleUng))
+    ent_CorrectionFactor.insert(0, str(correctionFactor))
+    ent_Density.insert(0, str(p))
+    ent_Depth.insert(0, str(depth))
+    ent_lenToBomb.insert(0, str(lenToBomb))
+    ent_Pos_dh.insert(0, str(dh))
+    ent_cor_left.insert(0, str(cor_left))
+    ent_air_resistance.insert(0, str(0.2))
+    ent_size_y.insert(0, str(size_y))
+    ent_size_x.insert(0, str(size_x))
+
 
 
 def start_calculation():
     fig = plt.figure(figsize=(9, 9))
 
     ax = fig.add_subplot(111, projection='3d')
-    er = EventReaction(ent_MassVV.get(), ent_equivalenceCoefficientVV.get())
-    gss = Glass(ent_TensileStrength.get(), ent_ModuleUng.get(), ent_CorrectionFactor.get(), ent_Density.get(), ent_Depth.get(), ent_lenToBomb.get(), ent_Pos_dh.get(), ent_cor_left.get(), 0.2, ent_er.get(), ent_size_y.get(), ent_size_x.get())
+    er = EventReaction(float(ent_MassVV.get()), float(ent_equivalenceCoefficientVV.get()))
+    gss = Glass(float(ent_TensileStrength.get()), float(ent_ModuleUng.get()), float(ent_CorrectionFactor.get()), float(ent_Density.get()), float(ent_Depth.get()), float(ent_lenToBomb.get()), float(ent_Pos_dh.get()), float(ent_cor_left.get()), float(ent_air_resistance.get()), er, float(ent_size_y.get()), float(ent_size_x.get()))
     gss.print_destroy(ax)
     plt.axis("square")
     plt.xlabel('X')
@@ -103,5 +132,5 @@ def start_calculation():
 
 Button(root, text="Рассчитать", command=start_calculation).grid(row=15, column=2, sticky=N)
 
-
+set_default_values()
 root.mainloop()

@@ -79,7 +79,7 @@ class Glass:
         r_y = self.pos_dh + cor_dh
         r_z = correct_left
 
-        print(v,delp, m/10000000)
+        print(v, delp, m/10000000)
         r_xs = list()
         r_ys = list()
         r_zs = list()
