@@ -1,17 +1,18 @@
 import math
 import random
 import numpy as np
+import scipy.interpolate
 
 fractionOfExplosionEnergy = 0  # доля энергии взрыва
 
 squere_count = [
-    [120 * 120, 0.03*0.3],
-    [80 * 80, 0.18*0.3],
-    [40 * 40, 0.33*0.3],
-    [30 * 30, 0.30*0.3],
-    [70 * 10, 0.12*0.3],
-    [50 * 10, 0.03*0.3],
-    [5 * 5, 0.7],
+    [0.120 * 0.120, 0.03*0.3],
+    [0.080 * 0.080, 0.18*0.3],
+    [0.040 * 0.040, 0.33*0.3],
+    [0.030 * 0.030, 0.30*0.3],
+    [0.070 * 0.010, 0.12*0.3],
+    [0.050 * 0.010, 0.03*0.3],
+    [0.005 * 0.005, 0.7],
 ]
 
 class EventReaction:
@@ -20,7 +21,12 @@ class EventReaction:
 
 
 def get_count_parts(x, y):
-    return math.sqrt(x * y)/3
+    S = [1.5*1.2, 3*1.2]
+    S.sort()
+    C = [835, 1670]
+    C.sort()
+    y_interp = scipy.interpolate.interp1d(S, C)
+    return y_interp(x*y)
 
 
 class Glass:
@@ -35,7 +41,7 @@ class Glass:
         :param moduleUng: модуль Юнга
         :param correctionFactor: поправочный коэффициент
         :param density: плотность стекла
-        :param h: толщина стекла
+        :param depth: толщина стекла
         :param distance_x: расстояние от места взрыва
         :param pos_dh: высота стекла над уровнем взрыва
         :param distance_z: смещение в сторону от взрыва
@@ -47,8 +53,8 @@ class Glass:
         self.tensileStrength, self.moduleUng, self.correctionFactor, self.p, self.depth, self.distance_x, self.pos_dh, self.distance_z, self.air_resistance \
             = tensileStrength, moduleUng, correctionFactor, density, depth, distance_x, pos_dh, distance_z, air_resistance
         self.event_destroy = event_destroy
-        self.size_x = size_x * 1000
-        self.size_y = size_y * 1000
+        self.size_x = size_x
+        self.size_y = size_y
         self.mass_react = event_destroy.mass_react
 
     def projectile(self, cor_dh: float = 0, correct_left: float = 0):
@@ -64,8 +70,8 @@ class Glass:
         v = 1 / (self.p * self.depth) * (ii ** 2 + (2 * self.correctionFactor * delp - fad) * self.p * (self.depth ** 2)) ** (1 / 2)
         theta = math.atan(self.pos_dh + cor_dh / math.sqrt(self.distance_x ** 2 + self.distance_z ** 2))
         g = 9.81
-        m = self.size_x * self.size_y * self.depth / 100 * self.p
-        if m<10000000:
+        m = self.size_x * self.size_y * self.depth * self.p
+        if m<0.01:
             return None, None, None, None
         square = self.size_x * self.size_y
         time = np.linspace(0, 100, 10000)
@@ -79,7 +85,7 @@ class Glass:
         r_y = self.pos_dh + cor_dh
         r_z = correct_left
 
-        print(v, delp, m/10000000)
+        print(v, delp, m)
         r_xs = list()
         r_ys = list()
         r_zs = list()
@@ -112,12 +118,12 @@ class Glass:
         return r_xs, r_ys, r_zs, tof
 
     def print_destroy(self, axes):
-        parts_count = get_count_parts(self.size_x, self.size_y)
+        parts_count = get_count_parts(self.size_x, self.size_y)+0
         print(parts_count)
         for i in squere_count:
             for j in range(int(i[1] * parts_count)):
-                cor_dh = float(random.uniform(0.0, float(self.size_x / 100)))
-                corect_left = float(random.uniform(0.0, float(self.size_y / 100)))
+                cor_dh = float(random.uniform(0.0, float(self.size_y)))
+                corect_left = float(random.uniform(0.0, float(self.size_x)))
                 r_xs, r_ys, r_zs, tof = Glass(self.tensileStrength, self.moduleUng, self.correctionFactor, self.p, self.depth, self.distance_x, self.pos_dh,
                                               self.distance_z,
                                               random.uniform(0.2, 1.2) / 10, self.event_destroy, math.sqrt(i[0]),

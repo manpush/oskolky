@@ -121,7 +121,7 @@ def start_calculation():
 
     ax = fig.add_subplot(111, projection='3d')
     er = EventReaction(float(ent_MassVV.get()), float(ent_equivalenceCoefficientVV.get()))
-    gss = Glass(float(ent_TensileStrength.get()), float(ent_ModuleUng.get()), float(ent_CorrectionFactor.get()), float(ent_Density.get()), float(ent_Depth.get()), float(ent_lenToBomb.get()), float(ent_Pos_dh.get()), float(ent_cor_left.get()), float(ent_air_resistance.get()), er, float(ent_size_y.get()), float(ent_size_x.get()))
+    gss = Glass(float(ent_TensileStrength.get()), float(ent_ModuleUng.get()), float(ent_CorrectionFactor.get()), float(ent_Density.get()), float(ent_Depth.get()), float(ent_lenToBomb.get()), float(ent_Pos_dh.get()), float(ent_cor_left.get()), float(ent_air_resistance.get()), er, float(ent_size_x.get()), float(ent_size_y.get()))
     gss.print_destroy(ax)
     plt.axis("square")
     plt.xlabel('X')
