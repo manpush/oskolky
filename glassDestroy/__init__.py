@@ -6,14 +6,15 @@ import scipy.interpolate
 fractionOfExplosionEnergy = 0  # доля энергии взрыва
 
 squere_count = [
-    [0.120 * 0.120, 0.03*0.3],
-    [0.080 * 0.080, 0.18*0.3],
-    [0.040 * 0.040, 0.33*0.3],
-    [0.030 * 0.030, 0.30*0.3],
-    [0.070 * 0.010, 0.12*0.3],
-    [0.050 * 0.010, 0.03*0.3],
+    [0.120 * 0.120, 0.03 * 0.3],
+    [0.080 * 0.080, 0.18 * 0.3],
+    [0.040 * 0.040, 0.33 * 0.3],
+    [0.030 * 0.030, 0.30 * 0.3],
+    [0.070 * 0.010, 0.12 * 0.3],
+    [0.050 * 0.010, 0.03 * 0.3],
     [0.005 * 0.005, 0.7],
 ]
+
 
 class EventReaction:
     def __init__(self, mass_react, keff):
@@ -21,12 +22,12 @@ class EventReaction:
 
 
 def get_count_parts(x, y):
-    S = [1.5*1.2, 3*1.2]
+    S = [1.5 * 1.2, 3 * 1.2]
     S.sort()
     C = [835, 1670]
     C.sort()
     y_interp = scipy.interpolate.interp1d(S, C)
-    return y_interp(x*y)
+    return y_interp(x * y)
 
 
 class Glass:
@@ -35,7 +36,8 @@ class Glass:
     # ee - поправочный коэффициент, p - плотность стекла,h – толщина стекла,eo – модуль Юнга
     # delp– давление во фронте,v0 - Скорость осколка,q– эффективная масса взрывчатого вещества
     # fad - f_d*ε_d
-    def __init__(self, tensileStrength, moduleUng, correctionFactor, density, depth, distance_x, pos_dh, distance_z, air_resistance, event_destroy, size_x, size_y):
+    def __init__(self, tensileStrength, moduleUng, correctionFactor, density, depth, distance_x, pos_dh, distance_z,
+                 air_resistance, event_destroy, size_x, size_y):
         """
         :param tensileStrength: прочность на растяжение
         :param moduleUng: модуль Юнга
@@ -67,11 +69,12 @@ class Glass:
             delp = 420 * rr ** (-1.45)
         ii = (350 * q ** (1 / 3)) / math.sqrt(self.distance_x ** 2 + self.distance_z ** 2)
         fad = 2.109 * self.tensileStrength ** 2 * rr ** (-0.03265) / self.moduleUng
-        v = 1 / (self.p * self.depth) * (ii ** 2 + (2 * self.correctionFactor * delp - fad) * self.p * (self.depth ** 2)) ** (1 / 2)
+        v = 1 / (self.p * self.depth) * (
+                    ii ** 2 + (2 * self.correctionFactor * delp - fad) * self.p * (self.depth ** 2)) ** (1 / 2)
         theta = math.atan(self.pos_dh + cor_dh / math.sqrt(self.distance_x ** 2 + self.distance_z ** 2))
         g = 9.81
         m = self.size_x * self.size_y * self.depth * self.p
-        if m<0.01:
+        if m < 0.01:
             return None, None, None, None
         square = self.size_x * self.size_y
         time = np.linspace(0, 100, 10000)
@@ -118,15 +121,40 @@ class Glass:
         return r_xs, r_ys, r_zs, tof
 
     def print_destroy(self, axes):
-        parts_count = get_count_parts(self.size_x, self.size_y)+0
+        parts_count = get_count_parts(self.size_x, self.size_y) + 0
         print(parts_count)
         for i in squere_count:
             for j in range(int(i[1] * parts_count)):
                 cor_dh = float(random.uniform(0.0, float(self.size_y)))
                 corect_left = float(random.uniform(0.0, float(self.size_x)))
-                r_xs, r_ys, r_zs, tof = Glass(self.tensileStrength, self.moduleUng, self.correctionFactor, self.p, self.depth, self.distance_x, self.pos_dh,
+                r_xs, r_ys, r_zs, tof = Glass(self.tensileStrength, self.moduleUng, self.correctionFactor, self.p,
+                                              self.depth, self.distance_x, self.pos_dh,
                                               self.distance_z,
                                               random.uniform(0.2, 1.2) / 10, self.event_destroy, math.sqrt(i[0]),
                                               math.sqrt(i[0])).projectile(cor_dh, corect_left)
                 if r_zs is not None:
                     axes.plot(r_xs, r_zs, r_ys)
+
+    def v05(self, m):
+        if m <= 0.0003:
+            return 10 ** (1.21 - 0.15 * math.log10(m))
+        else:
+            return 192 * 10 ** (math.log10(1000 * m / 0.0072) * (0.2682 * math.sin(0.7853 / 2) - 0.4375))
+
+    def v075(self, m):
+        if m < 0.0139:
+            return 10 ** (1.12 - 0.24 * math.log10(m))
+        elif m < 3.1267:
+            return 10 ** (0.68 - 0.48 * math.log10(m))
+        else:
+            return 10 ** 0.44
+
+    def v1(self, m):
+        if m < 0.0593:
+            return 10 ** (1.7 - 0.15 * math.log10(m))
+        elif m < 3.0682:
+            return 10 ** (1.28 - 0.49 * math.log10(m))
+        else:
+            return 10 ** (1.5)
+    def P(self, m, v):
+        pass
