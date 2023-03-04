@@ -6,13 +6,13 @@ import scipy.interpolate
 fractionOfExplosionEnergy = 0  # доля энергии взрыва
 
 squere_count = [
-    [0.120 * 0.120, 0.03 * 0.3],
-    [0.080 * 0.080, 0.18 * 0.3],
-    [0.040 * 0.040, 0.33 * 0.3],
-    [0.030 * 0.030, 0.30 * 0.3],
-    [0.070 * 0.010, 0.12 * 0.3],
-    [0.050 * 0.010, 0.03 * 0.3],
-    [0.005 * 0.005, 0.7],
+    [0.120 * 0.120, 1/835],
+    [0.080 * 0.080, 6/835],
+    [0.040 * 0.040, 11/835],
+    [0.030 * 0.030, 10/835],
+    [0.070 * 0.010, 4/835],
+    [0.050 * 0.010, 1/835],
+    [0.005 * 0.005, 802/835],
 ]
 
 
@@ -58,6 +58,7 @@ class Glass:
         self.size_x = size_x
         self.size_y = size_y
         self.mass_react = event_destroy.mass_react
+        self.p_max = 0.0
 
     def projectile(self, cor_dh: float = 0, correct_left: float = 0):
         q = (1 - fractionOfExplosionEnergy) * self.event_destroy.keff * self.event_destroy.mass_react  # q –
@@ -117,44 +118,134 @@ class Glass:
             if not (r_y >= 0.0):
                 tof = t
                 break
-
-        return r_xs, r_ys, r_zs, tof
+        p = self.damage_prob(m, v)
+        return r_xs, r_ys, r_zs, p
 
     def print_destroy(self, axes):
         parts_count = get_count_parts(self.size_x, self.size_y) + 0
         print(parts_count)
         for i in squere_count:
-            for j in range(int(i[1] * parts_count)):
+            for j in range(round(i[1] * parts_count)):
                 cor_dh = float(random.uniform(0.0, float(self.size_y)))
                 corect_left = float(random.uniform(0.0, float(self.size_x)))
-                r_xs, r_ys, r_zs, tof = Glass(self.tensileStrength, self.moduleUng, self.correctionFactor, self.p,
+                r_xs, r_ys, r_zs, p = Glass(self.tensileStrength, self.moduleUng, self.correctionFactor, self.p,
                                               self.depth, self.distance_x, self.pos_dh,
                                               self.distance_z,
                                               random.uniform(0.2, 1.2) / 10, self.event_destroy, math.sqrt(i[0]),
                                               math.sqrt(i[0])).projectile(cor_dh, corect_left)
+
+                if p is not None and float(p) > self.p_max:
+                    self.p_max = float(p)
+                #self.p_max = max(float(self.p_max), float(p))
                 if r_zs is not None:
                     axes.plot(r_xs, r_zs, r_ys)
 
-    def v05(self, m):
-        if m <= 0.0003:
-            return 10 ** (1.21 - 0.15 * math.log10(m))
-        else:
-            return 192 * 10 ** (math.log10(1000 * m / 0.0072) * (0.2682 * math.sin(0.7853 / 2) - 0.4375))
+    def damage_prob(self, m, v):
+        """
+        Оценка вероятности поражения человека осколком стекла
+        в зависимости от скорости и массы.
 
-    def v075(self, m):
-        if m < 0.0139:
-            return 10 ** (1.12 - 0.24 * math.log10(m))
-        elif m < 3.1267:
-            return 10 ** (0.68 - 0.48 * math.log10(m))
-        else:
-            return 10 ** 0.44
+        :param float m: Масса осколка стекла (кг).
+        :param float v: Скорость осколка стекла (м/с).
+        :return: Вероятность поражения от 0 до 1.
+        :rtype: float
+        """
 
-    def v1(self, m):
-        if m < 0.0593:
-            return 10 ** (1.7 - 0.15 * math.log10(m))
-        elif m < 3.0682:
-            return 10 ** (1.28 - 0.49 * math.log10(m))
-        else:
-            return 10 ** (1.5)
-    def P(self, m, v):
-        pass
+        def dist(a, b):
+            """
+            Евклидово расстояние для одномерного случая.
+
+            :param float a: Координата 1-ой точки.
+            :param float b: Координата 2-ой точки.
+            :return: Расстояние
+            :rtype: float
+            """
+            return ((a - b) ** 2) ** (1 / 2)
+
+        def vel0(m):
+            """
+            Значение скорости в зависимости от массы осколка
+            для порогового уровня вероятности поражения 0.0
+
+            :param float m: Масса осколка стекла (кг).
+            :return: Скорость (м/с).
+            :rtype: float
+            """
+            return 0
+
+        def vel50(m):
+            """
+            Значение скорости в зависимости от массы осколка
+            для порогового уровня вероятности поражения 0.5
+
+            :param float m: Масса осколка стекла (кг).
+            :return: Скорость (м/с).
+            :rtype: float
+            """
+            if m <= 0.000309334:
+                return 10 ** (1.21 - 0.15 * np.log10(m))
+            else:
+                return 192 * 10 ** (np.log10((m * 1000) / (0.0072)) * (0.2682 * np.sin(np.radians(45) / 2) - 0.4375))
+
+        def vel75(m):
+            """
+            Значение скорости в зависимости от массы осколка
+            для порогового уровня вероятности поражения 0.75
+
+            :param float m: Масса осколка стекла (кг).
+            :return: Скорость (м/с).
+            :rtype: float
+            """
+            if m <= 0.01389:
+                return 10 ** (1.12 - 0.24 * np.log10(m))
+            elif m <= 3.12667:
+                return 10 ** (0.68 - 0.48 * np.log10(m))
+            else:
+                return 10 ** 0.44
+
+        def vel1(m):
+            """
+            Значение скорости в зависимости от массы осколка
+            для порогового уровня вероятности поражения 1.0
+
+            :param float m: Масса осколка стекла (кг).
+            :return: Скорость (м/с).
+            :rtype: float
+            """
+            if m <= 0.0592703:
+                return 10 ** (1.7 - 0.15 * np.log10(m))
+            elif m <= 3.06821:
+                return 10 ** (1.28 - 0.49 * np.log10(m))
+            else:
+                return 10 ** 1.05
+
+        # Для околонулевых скоростей принимаем вероятность за 0.0
+        if v <= 10 ** (-5):
+            return 0.0
+
+        # Значение скорости при пороговых значениях вероятности 0, 0.5, 0.75, 1.0
+        v0, v50, v75, v1 = vel0(m), vel50(m), vel75(m), vel1(m)
+
+        velocities = [v0, v50, v75, v1]
+        probs = [0.0, 0.5, 0.75, 1.0]
+
+        # При скорости осколка выше порога вероятности 1.0 возвращаем значение
+        if v >= v1:
+            return 1
+
+        # Ищем верхнее и нижнее значение вероятности по пороговому значению скорости
+        U_ind = 1
+        for i in range(len(velocities) - 1):
+            if velocities[i + 1] >= v:
+                U_ind = i + 1
+                break
+        L_ind = U_ind - 1
+
+        # Вычисление значения вероятности как среднего взвешенного верхнего и нижнего порогов,
+        # где веса - евклидово расстояние по скорости
+        dU, dL = dist(v, velocities[U_ind]), dist(v, velocities[L_ind])
+        U, L = probs[U_ind], probs[L_ind]
+        prob = (L * (1 / dL) + U * (1 / dU)) / ((1 / dL) + (1 / dU))
+
+        return float(prob)
+

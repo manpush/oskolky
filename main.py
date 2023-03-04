@@ -27,7 +27,7 @@ cor_left = 0  # сдвиг стекла относительно взрыва (�
 size_x = 1.2  # ширина стекла (м)
 size_y = 1.5  # высота стекла (м)
 
-root.rowconfigure(index=15, weight=40)
+root.rowconfigure(index=16, weight=40)
 
 Label(root, text="Параметры события").grid(row=0, column=2, columnspan=2)
 
@@ -85,6 +85,10 @@ Label(root, text="Ширина стекла").grid(row=14, column=2, sticky=E)
 ent_size_x = Entry(root, width=30)
 ent_size_x.grid(row=14, column=3)
 
+Label(root, text="Максимальная вероятность поражения человека осколком: ").grid(row=15, column=2, sticky=E)
+P_max_lbl = Label(root, text="")
+P_max_lbl.grid(row=15, column=3, sticky=W)
+
 def set_default_values():
     ent_MassVV.delete(0, END)
     ent_equivalenceCoefficientVV.delete(0, END)
@@ -113,7 +117,7 @@ def set_default_values():
     ent_air_resistance.insert(0, str(0.2))
     ent_size_y.insert(0, str(size_y))
     ent_size_x.insert(0, str(size_x))
-
+    P_max_lbl["text"] = '0'
 
 
 def start_calculation():
@@ -127,10 +131,11 @@ def start_calculation():
     plt.xlabel('X')
     plt.ylabel('Z')
     canvas = FigureCanvasTkAgg(fig, root)
-    canvas.get_tk_widget().grid(row=0, column=0, rowspan=16)
+    canvas.get_tk_widget().grid(row=0, column=0, rowspan=17)
+    P_max_lbl["text"] = str(round(gss.p_max, 3))
 
 
-Button(root, text="Рассчитать", command=start_calculation).grid(row=15, column=2, sticky=N)
+Button(root, text="Рассчитать", command=start_calculation).grid(row=16, column=2, sticky=N)
 
 set_default_values()
 root.mainloop()
