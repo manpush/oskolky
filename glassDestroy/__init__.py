@@ -22,6 +22,12 @@ class EventReaction:
 
 
 def get_count_parts(x, y):
+    """
+    Возвращает количество осколков на которое разобъётся сткло указанной длинны и ширины
+    :param x: длинна
+    :param y: ширина
+    :return: количество осколков
+    """
     S = [1.5 * 1.2, 3 * 1.2]
     S.sort()
     C = [835, 1670]
@@ -61,6 +67,12 @@ class Glass:
         self.p_max = 0.0
 
     def projectile(self, cor_dh: float = 0, correct_left: float = 0):
+        """
+        рассчёт траекториии полёта осколка
+        :param cor_dh: расстояние от нижней границы разбитого стекла до центра исследуемого осколка
+        :param correct_left:  расстояние от левой границы разбитого стекла до центра исследуемого осколка
+        :return: списки координат для построения графика
+        """
         q = (1 - fractionOfExplosionEnergy) * self.event_destroy.keff * self.event_destroy.mass_react  # q –
         # эффективная масса взрывчатого вещества
         rr = math.sqrt(self.distance_x ** 2 + self.distance_z ** 2) / q ** (1 / 3)  # rr - приведенное расстояние
@@ -122,6 +134,10 @@ class Glass:
         return r_xs, r_ys, r_zs, p
 
     def print_destroy(self, axes):
+        """
+        Разбитие стекла, вычисление траекторий осколков, построение графиков
+        :param axes: fig.subplot на котором будет отображён график
+        """
         parts_count = get_count_parts(self.size_x, self.size_y) + 0
         print(parts_count)
         for i in squere_count:
@@ -142,6 +158,7 @@ class Glass:
 
     def damage_prob(self, m, v):
         """
+        Федоровичев Д. 2022г.
         Оценка вероятности поражения человека осколком стекла
         в зависимости от скорости и массы.
 
