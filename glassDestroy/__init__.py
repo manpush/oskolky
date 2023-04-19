@@ -2,6 +2,7 @@ import math
 import random
 import numpy as np
 import scipy.interpolate
+from scipy.optimize import Bounds
 
 fractionOfExplosionEnergy = 0  # доля энергии взрыва
 
@@ -73,17 +74,7 @@ class Glass:
         :param correct_left:  расстояние от левой границы разбитого стекла до центра исследуемого осколка
         :return: списки координат для построения графика
         """
-        q = (1 - fractionOfExplosionEnergy) * self.event_destroy.keff * self.event_destroy.mass_react  # q –
-        # эффективная масса взрывчатого вещества
-        rr = math.sqrt(self.distance_x ** 2 + self.distance_z ** 2) / q ** (1 / 3)  # rr - приведенное расстояние
-        if rr < 17.8:
-            delp = 100 * (0.92 + ((3.5 + 10.6 / rr) / rr)) / rr
-        else:
-            delp = 420 * rr ** (-1.45)
-        ii = (350 * q ** (1 / 3)) / math.sqrt(self.distance_x ** 2 + self.distance_z ** 2)
-        fad = 2.109 * self.tensileStrength ** 2 * rr ** (-0.03265) / self.moduleUng
-        v = 1 / (self.p * self.depth) * (
-                    ii ** 2 + (2 * self.correctionFactor * delp - fad) * self.p * (self.depth ** 2)) ** (1 / 2)
+        v = self.get_speed(self.tensileStrength, self.depth)
         theta = math.atan(self.pos_dh + cor_dh / math.sqrt(self.distance_x ** 2 + self.distance_z ** 2))
         g = 9.81
         m = self.size_x * self.size_y * self.depth * self.p
@@ -101,7 +92,6 @@ class Glass:
         r_y = self.pos_dh + cor_dh
         r_z = correct_left
 
-        print(v, delp, m)
         r_xs = list()
         r_ys = list()
         r_zs = list()
@@ -132,6 +122,19 @@ class Glass:
                 break
         p = self.damage_prob(m, v)
         return r_xs, r_ys, r_zs, p
+    def get_speed(self, tensileStrength, depth):
+        q = (1 - fractionOfExplosionEnergy) * self.event_destroy.keff * self.event_destroy.mass_react  # q –
+        # эффективная масса взрывчатого вещества
+        rr = math.sqrt(self.distance_x ** 2 + self.distance_z ** 2) / q ** (1 / 3)  # rr - приведенное расстояние
+        if rr < 17.8:
+            delp = 100 * (0.92 + ((3.5 + 10.6 / rr) / rr)) / rr
+        else:
+            delp = 420 * rr ** (-1.45)
+        ii = (350 * q ** (1 / 3)) / math.sqrt(self.distance_x ** 2 + self.distance_z ** 2)
+        fad = 2.109 * tensileStrength ** 2 * rr ** (-0.03265) / self.moduleUng
+        if ii ** 2 + (2 * self.correctionFactor * delp - fad) * self.p * (depth ** 2) < 0:
+            return 0
+        return 1 / (self.p * depth) * (ii ** 2 + (2 * self.correctionFactor * delp - fad) * self.p * (depth ** 2)) ** (1 / 2)
 
     def print_destroy(self, axes):
         """

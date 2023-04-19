@@ -1,5 +1,8 @@
+import tkinter
+
 import matplotlib.pyplot as plt
 from tkinter import *
+from tkinter.ttk import *
 import matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -26,8 +29,16 @@ dh = 0  # высота от 0 (м)
 cor_left = 0  # сдвиг стекла относительно взрыва (м)
 size_x = 1.2  # ширина стекла (м)
 size_y = 1.5  # высота стекла (м)
+budget = 2000 # максимальная стоимость замены квадратного метра стекла
 
-root.rowconfigure(index=16, weight=40)
+import csv
+
+with open('glassParam.csv', newline='\n') as csvfile:
+    reader = csv.reader(csvfile, dialect='excel', delimiter='\t')
+    glasses = [tuple(row) for row in reader]
+
+
+root.rowconfigure(index=18, weight=40)
 
 Label(root, text="Параметры события").grid(row=0, column=2, columnspan=2)
 
@@ -89,6 +100,23 @@ Label(root, text="Максимальная вероятность поражен
 P_max_lbl = Label(root, text="")
 P_max_lbl.grid(row=15, column=3, sticky=W)
 
+Label(root, text="Бюджет на замену кв. метра стекла").grid(row=16, column=2, sticky=E)
+ent_budget = Entry(root, width=30)
+ent_budget.grid(row=16, column=3)
+
+Label(root, text="Оптимальное стекло для установки: ").grid(row=17, column=2, sticky=E)
+tv = Treeview(show="headings", height=1)
+tv['columns'] = ('h', 'p', 'price', 'speed')
+tv.heading('h', text='Толщина')
+tv.column('h', anchor='w', width=60)
+tv.heading('p', text='Прочность на растяжение')
+tv.column('p', anchor='w', width=160)
+tv.heading('price', text='Цена')
+tv.column('price', anchor='w', width=50)
+tv.heading('speed', text='Скорость осколка')
+tv.column('speed', anchor='w', width=50)
+tv.grid(row=17, column=3, sticky=E)
+
 def set_default_values():
     ent_MassVV.delete(0, END)
     ent_equivalenceCoefficientVV.delete(0, END)
@@ -103,6 +131,7 @@ def set_default_values():
     ent_air_resistance.delete(0, END)
     ent_size_y.delete(0, END)
     ent_size_x.delete(0, END)
+    ent_budget.delete(0, END)
 
     ent_MassVV.insert(0, str(massVV))
     ent_equivalenceCoefficientVV.insert(0, str(equivalenceCoefficientVV))
@@ -118,11 +147,16 @@ def set_default_values():
     ent_size_y.insert(0, str(size_y))
     ent_size_x.insert(0, str(size_x))
     P_max_lbl["text"] = '0'
+    ent_budget.insert(0, str(budget))
 
-
+def drop_excess_vlues():
+    try:
+        tv.delete("I001")
+    except:
+        pass
 def start_calculation():
+    drop_excess_vlues()
     fig = plt.figure(figsize=(9, 9))
-
     ax = fig.add_subplot(111, projection='3d')
     er = EventReaction(float(ent_MassVV.get()), float(ent_equivalenceCoefficientVV.get()))
     gss = Glass(float(ent_TensileStrength.get()), float(ent_ModuleUng.get()), float(ent_CorrectionFactor.get()), float(ent_Density.get()), float(ent_Depth.get()), float(ent_lenToBomb.get()), float(ent_Pos_dh.get()), float(ent_cor_left.get()), float(ent_air_resistance.get()), er, float(ent_size_x.get()), float(ent_size_y.get()))
@@ -131,11 +165,16 @@ def start_calculation():
     plt.xlabel('X')
     plt.ylabel('Z')
     canvas = FigureCanvasTkAgg(fig, root)
-    canvas.get_tk_widget().grid(row=0, column=0, rowspan=17)
+    canvas.get_tk_widget().grid(row=0, column=0, rowspan=19)
     P_max_lbl["text"] = str(round(gss.p_max, 3))
+    resVals = []
+    for glass in glasses:
+        resVals.append((glass, gss.get_speed(glass[1], glass[0])))
+    res = min(sorted(list(filter(lambda x:x[0][2]<float(ent_budget.get()), resVals)), key=lambda x:x[0][2]), key=lambda x: x[1])
+    tv.insert("", tkinter.END, text='Listbox', values=(str(res[0][0])+" "+str(res[0][1])+' '+str(res[0][2])+' '+str(res[1])))
 
 
-Button(root, text="Рассчитать", command=start_calculation).grid(row=16, column=2, sticky=N)
+Button(root, text="Рассчитать", command=start_calculation).grid(row=18, column=2, sticky=N)
 
 set_default_values()
 root.mainloop()
