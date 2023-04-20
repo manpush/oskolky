@@ -150,10 +150,7 @@ def set_default_values():
     ent_budget.insert(0, str(budget))
 
 def drop_excess_vlues():
-    try:
-        tv.delete("I001")
-    except:
-        pass
+    tv.delete(*tv.get_children())
 def start_calculation():
     drop_excess_vlues()
     fig = plt.figure(figsize=(9, 9))
@@ -169,8 +166,11 @@ def start_calculation():
     P_max_lbl["text"] = str(round(gss.p_max, 3))
     resVals = []
     for glass in glasses:
-        resVals.append((glass, gss.get_speed(glass[1], glass[0])))
-    res = min(sorted(list(filter(lambda x:x[0][2]<float(ent_budget.get()), resVals)), key=lambda x:x[0][2]), key=lambda x: x[1])
+        resVals.append((glass, gss.get_speed(float(glass[1]), float(glass[0]))))
+    try:
+        res = min(sorted(list(filter(lambda x:float(x[0][2])<float(ent_budget.get()), resVals)), key=lambda x:float(x[0][2])), key=lambda x: float(x[1]))
+    except:
+        res = (("Проверьте параметры бюджета.", 0, 0), 0)
     tv.insert("", tkinter.END, text='Listbox', values=(str(res[0][0])+" "+str(res[0][1])+' '+str(res[0][2])+' '+str(res[1])))
 
 
