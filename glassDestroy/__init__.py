@@ -19,7 +19,7 @@ squere_count = [
 
 class EventReaction:
     def __init__(self, mass_react, keff):
-        self.mass_react, self.keff = mass_react * 100, keff
+        self.mass_react, self.keff = mass_react, keff
 
 
 def get_count_parts(x, y):
@@ -33,7 +33,7 @@ def get_count_parts(x, y):
     S.sort()
     C = [835, 1670]
     C.sort()
-    y_interp = scipy.interpolate.interp1d(S, C)
+    y_interp = scipy.interpolate.interp1d(S, C, bounds_error=False, fill_value="extrapolate")
     return y_interp(x * y)
 
 
@@ -66,6 +66,7 @@ class Glass:
         self.size_y = size_y
         self.mass_react = event_destroy.mass_react
         self.p_max = 0.0
+        self.err_msg = ''
 
     def projectile(self, cor_dh: float = 0, correct_left: float = 0):
         """
@@ -125,14 +126,17 @@ class Glass:
     def get_speed(self, tensileStrength, depth):
         q = (1 - fractionOfExplosionEnergy) * self.event_destroy.keff * self.event_destroy.mass_react  # q –
         # эффективная масса взрывчатого вещества
-        rr = math.sqrt(self.distance_x ** 2 + self.distance_z ** 2) / q ** (1 / 3)  # rr - приведенное расстояние
-        if rr < 17.8:
+        rr = math.sqrt(self.distance_x ** 2 + self.distance_z ** 2) / (q ** (1 / 3) ) # rr - приведенное расстояние
+        if rr < 17.8 and rr > 1.2:
             delp = 100 * (0.92 + ((3.5 + 10.6 / rr) / rr)) / rr
-        else:
+        elif rr < 17.8:
             delp = 420 * rr ** (-1.45)
-        ii = (350 * q ** (1 / 3)) / math.sqrt(self.distance_x ** 2 + self.distance_z ** 2)
-        fad = 2.109 * tensileStrength ** 2 * rr ** (-0.03265) / self.moduleUng
+        else:
+            self.err_msg = "Недостаточно энергии для разбития стекла."
+        ii = (350 * (q ** (1 / 3))) / rr
+        fad = (2.109 * tensileStrength ** 2 * rr ** (-0.03265)) / self.moduleUng
         if ii ** 2 + (2 * self.correctionFactor * delp - fad) * self.p * (depth ** 2) < 0:
+            self.err_msg = "Недостаточно энергии для разбития стекла."
             return 0
         return 1 / (self.p * depth) * (ii ** 2 + (2 * self.correctionFactor * delp - fad) * self.p * (depth ** 2)) ** (1 / 2)
 
@@ -142,19 +146,21 @@ class Glass:
         :param axes: fig.subplot на котором будет отображён график
         """
         parts_count = get_count_parts(self.size_x, self.size_y) + 0
-        print(parts_count)
+        # print(parts_count)
         for i in squere_count:
             for j in range(round(i[1] * parts_count)):
                 cor_dh = float(random.uniform(0.0, float(self.size_y)))
                 corect_left = float(random.uniform(0.0, float(self.size_x)))
-                r_xs, r_ys, r_zs, p = Glass(self.tensileStrength, self.moduleUng, self.correctionFactor, self.p,
-                                              self.depth, self.distance_x, self.pos_dh,
-                                              self.distance_z,
-                                              random.uniform(0.2, 1.2) / 10, self.event_destroy, math.sqrt(i[0]),
-                                              math.sqrt(i[0])).projectile(cor_dh, corect_left)
-
+                child_glass = Glass(self.tensileStrength, self.moduleUng, self.correctionFactor, self.p,
+                      self.depth, self.distance_x, self.pos_dh,
+                      self.distance_z,
+                      random.uniform(0.2, 1.2) / 10, self.event_destroy, math.sqrt(i[0]),
+                      math.sqrt(i[0]))
+                r_xs, r_ys, r_zs, p = child_glass.projectile(cor_dh, corect_left)
+                self.v_glass = self.get_speed(self.tensileStrength, self.depth)
                 if p is not None and float(p) > self.p_max:
                     self.p_max = float(p)
+
                 #self.p_max = max(float(self.p_max), float(p))
                 if r_zs is not None:
                     axes.plot(r_xs, r_zs, r_ys)
