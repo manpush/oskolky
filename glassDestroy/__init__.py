@@ -164,6 +164,14 @@ class Glass:
                 #self.p_max = max(float(self.p_max), float(p))
                 if r_zs is not None:
                     axes.plot(r_xs, r_zs, r_ys)
+    def max_damage_prob(self, glass=None):
+        if glass is None:
+            glass = (self.depth, self.tensileStrength, "0")
+        res = max([ self.damage_prob(i[0] * float(glass[0])*self.p, self.get_speed(float(glass[1]), float(glass[0]))) for i in squere_count])
+        if res > 0:
+            return 1-res
+        else:
+            return 1
 
     def damage_prob(self, m, v):
         """

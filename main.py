@@ -187,14 +187,14 @@ def start_calculation():
     V_max_lbl["text"] = str(round(gss.v_glass, 3)) + ' ' + gss.err_msg
     resVals = []
     for glass in glasses:
-        resVals.append((glass, gss.get_speed(float(glass[1]), float(glass[0]))))
+        resVals.append((glass, gss.get_speed(float(glass[1]), float(glass[0])),gss.max_damage_prob(glass)))
     try:
-        res = min(sorted(list(filter(lambda x: float(x[0][2]) < float(ent_budget.get()), resVals)),
-                         key=lambda x: float(x[0][2])), key=lambda x: float(x[1]))
-        if res[1] > gss.get_speed(gss.tensileStrength, gss.depth):
+        res = max(sorted(list(filter(lambda x: float(x[0][2]) < float(ent_budget.get()), resVals)),
+                         key=lambda x: float(x[0][2])), key=lambda x: float(x[2]))
+        if res[2] < gss.max_damage_prob(None):
             raise Exception()
     except:
-        res = (("Недостаток бюджета.", 0, 0), 0)
+        res = (("Недостаток бюджета. ", 0, 0), 0, 0)
     tv.insert("", tkinter.END, text='Listbox', values=(
                 str(res[0][0]) + " " + str(res[0][1]) + ' ' + str(res[0][2]) + ' ' + str(res[1]) + ' ' + str(res[2])))
 
